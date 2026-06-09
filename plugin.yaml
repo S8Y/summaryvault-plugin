@@ -1,0 +1,41 @@
+name: summaryvault
+version: 1.0.0
+description: |
+  Automatically captures completed task summaries from Hermes sessions
+  and submits them to SummaryVault for encrypted archival.
+  Captures final outputs only — never intermediate turns, tool calls,
+  or chain-of-thought reasoning.
+author: Hermes
+url: https://hermes-agent.nousresearch.com
+
+provides_tools:
+  - vault_submit
+
+provides_hooks:
+  - transform_llm_output
+  - on_session_finalize
+
+requires_packages: []
+
+config:
+  server_url:
+    type: string
+    default: "http://192.168.0.209:6767"
+    description: "SummaryVault server URL"
+  api_key:
+    type: string
+    default: ""
+    description: "API key from vault initialization"
+  auto_capture:
+    type: boolean
+    default: true
+    description: "Automatically capture on session finalize"
+  tags:
+    type: array
+    items: string
+    default: ["hermes-auto"]
+    description: "Default tags for auto-captured summaries"
+  max_content_length:
+    type: integer
+    default: 100000
+    description: "Maximum content length (characters)"
