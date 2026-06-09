@@ -50,7 +50,8 @@ class SummaryVaultPlugin(HermesPlugin):
 
     def __init__(self, config: dict):
         super().__init__(config)
-        self._config = config.get(CONFIG_KEY, {})
+        plugins_cfg = config.get("plugins", {})
+        self._config = plugins_cfg.get("summaryvault", {})
         self._client = None
         self._queue = None
         self._session_tags = self._config.get("tags", ["hermes-auto"])
