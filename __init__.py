@@ -52,12 +52,26 @@ _dedup_lock = threading.Lock()
 
 # ── Plugin Registration ───────────────────────────────────────────────
 
-def register(ctx):
-    """Called by Hermes when the plugin is loaded."""
-    # Read plugin config from Hermes config
-    # Hermes stores: config["plugins"]["summaryvault"]["key"] = value
-    plugins_cfg = ctx.config.get("plugins", {})
-    plugin_cfg = plugins_cfg.get("summaryvault", {})
+def _load_plugin_config():
+    """Read plugin config from ~/.hermes/config.yaml directly.
+
+    Hermes PluginContext does NOT expose config attributes. We read
+    the YAML file directly since that's what `hermes config set` writes to.
+    """
+    import os
+    from pathlib import Path
+
+    config_path = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes")) / "config.yaml"
+    plugin_cfg = {}
+
+    if config_path.exists():
+        try:
+            import yaml
+            with open(config_path) as f:
+                raw = yaml.safe_load(f) or {}
+            plugin_cfg = raw.get("plugins", {}).get("summaryvault", {})
+        except Exception:
+            pass
 
     _state["config"] = plugin_cfg
     _state["server_url"] = plugin_cfg.get("server_url", "http://192.168.0.209:6767")
@@ -65,6 +79,11 @@ def register(ctx):
     _state["session_tags"] = plugin_cfg.get("tags", ["hermes-auto"])
     _state["auto_capture"] = plugin_cfg.get("auto_capture", True)
     _state["max_length"] = plugin_cfg.get("max_content_length", 100000)
+
+
+def register(ctx):
+    """Called by Hermes when the plugin is loaded."""
+    _load_plugin_config()
 
     # Create client and queue
     _state["client"] = SummaryVaultClient(
